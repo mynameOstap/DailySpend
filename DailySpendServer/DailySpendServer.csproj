@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+	<Folder Include="Services\Background\" />
 	<Folder Include="Sqlite\" />
   </ItemGroup>
 
