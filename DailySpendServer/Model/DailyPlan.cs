@@ -7,6 +7,6 @@
         public UserSetting? UserSetting { get; set; }
         public DateTime Date { get; set; }
         public int PlannedAmount { get; set; }
-        public int SpentAmount { get; set; }
+        public long SpentAmount { get; set; }
     }
 }

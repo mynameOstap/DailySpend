@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using DailySpendServer.Model;
+using DailySpendServer.Services;
 
 namespace DailySpendServer.Controllers
 {
@@ -13,11 +14,13 @@ namespace DailySpendServer.Controllers
     {
         private readonly HttpSender _httpSender;
         private readonly DailySpendContext _db;
+        private readonly CalculateOutley _calculateOutley;
 
-        public BankController(HttpSender httpSender, DailySpendContext db)
+        public BankController(HttpSender httpSender, DailySpendContext db, CalculateOutley calculateOutley)
         {
             _httpSender = httpSender;
             _db = db;
+            _calculateOutley = calculateOutley;
         }
 
         [HttpPost("api/bank/validateToken")]
@@ -52,7 +55,7 @@ namespace DailySpendServer.Controllers
         [HttpPost("api/monobank/webhook/{userId}")]
         public async Task<IActionResult> ReceiveWebHook([FromRoute] string userId, [FromQuery] string s, [FromBody] MonoWebhookUpdateDTO update)
         {
-            var user = await _db.UserSettings.AsNoTracking().FirstOrDefaultAsync(u => u.id == userId);
+            var user = await _db.UserSettings.Include(b => b.BankAccount).FirstOrDefaultAsync(u => u.id == userId);
             if (user == null || user.WebHookSecret != s || string.IsNullOrWhiteSpace(user.WebHookSecret))
             {
                 return Unauthorized();
@@ -61,7 +64,7 @@ namespace DailySpendServer.Controllers
             if (item == null)
             {
                 return Ok();
-            }
+            }            
             _db.Notifications.Add(new Notification
             {
 
@@ -73,7 +76,15 @@ namespace DailySpendServer.Controllers
                 Balance = item.Balance
 
             });
-
+            user.BankAccount!.Balance = item.Balance;
+            await _db.SaveChangesAsync();
+            await _calculateOutley.ApplyExpense(new NotificationUpdateDTO
+            {
+                UserSettingId = userId,
+                Amount = item.Amount,
+                Time = DateTimeOffset.FromUnixTimeSeconds(item.Time).DateTime,
+                Balance = item.Balance
+            });
             return Ok();
         }
 
