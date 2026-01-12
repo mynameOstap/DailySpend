@@ -1,6 +1,7 @@
 ﻿using DailySpendServer.Data;
 using DailySpendServer.DTO;
 using DailySpendServer.Model;
+using DailySpendServer.Services;
 using DailySpendServer.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace DailySpendServer.Controllers
     {
         private readonly DailySpendContext _db;
         private readonly HttpSender _httpSender;
-        public UserController(DailySpendContext db, HttpSender httpSender)
+        private readonly CalculateOutley _calculateOutley;
+        public UserController(DailySpendContext db, HttpSender httpSender,CalculateOutley calculateOutley)
         {
             _db = db;
             _httpSender = httpSender;
+            _calculateOutley = calculateOutley; 
         }
 
         [HttpGet("api/users/settings")]
@@ -58,12 +61,31 @@ namespace DailySpendServer.Controllers
         [HttpGet("api/users/status")]
         public async Task<IActionResult> GetStatus([FromQuery] string userId)
         {
-           var status = await _db.DailyPlans.FirstOrDefaultAsync(s => s.UserSetting.id == userId);
-              if (status == null)
-              {
-                return NotFound();
+            var today = DateTime.UtcNow.Date;
+
+            var plan = await _db.DailyPlans
+                .Include(p => p.UserSetting)
+                    .ThenInclude(u => u.BankAccount)
+                .FirstOrDefaultAsync(p =>
+                    p.UserSettingId == userId &&
+                    p.Date == today);
+
+            if (plan == null)
+            {
+                plan = await _calculateOutley.CreateDailyPlan(userId, today);
+                if (plan == null)
+                    return NotFound();
             }
-              return Ok(status);
+
+            return Ok(new StatusResponseDTO
+            {
+                UserSettingId = plan.UserSettingId,
+                PlannedAmount = plan.PlannedAmount,
+                SpentAmount = plan.SpentAmount,
+                Balance = plan.UserSetting?.BankAccount?.Balance ?? 0,
+                daysToSalary = plan.UserSetting?.daysToSalary ?? 0
+            });
         }
+
     }
 }

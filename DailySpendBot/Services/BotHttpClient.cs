@@ -1,4 +1,6 @@
 ﻿using DailySpendBot.DTO;
+using DailySpendBot.Messages;
+using DailySpendServer.DTO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -48,7 +50,16 @@ namespace DailySpendBot.Services
             {
                 return null;
             }
-            return content;
+            var status = JsonSerializer.Deserialize<StatusResponseDTO>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            if (status == null)
+            {
+                return null;
+            }
+
+            return StatusMessageBuilder.Build(status);
         }
         public async Task<UserSettingDTO> GetUserSettings(string userId)
         {

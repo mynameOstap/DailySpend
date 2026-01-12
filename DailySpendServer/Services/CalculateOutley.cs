@@ -21,7 +21,7 @@ namespace DailySpendServer.Services
             if (update.Time == null)
                 return;
 
-            var date = update.Time.Value.Date;
+            var date = update.Time.Value.ToUniversalTime().Date;
 
             var plan = await _db.DailyPlans
                 .FirstOrDefaultAsync(p =>
@@ -56,10 +56,33 @@ namespace DailySpendServer.Services
                 SpentAmount = 0
             };
 
+            var previousPlan = await _db.DailyPlans
+                .Where(p => p.UserSettingId == user.id)
+                .OrderByDescending(p => p.Date)
+                .FirstOrDefaultAsync();
+            var yesterday = date.AddDays(-1);
+            if (previousPlan != null && previousPlan.Date == yesterday)
+            {
+                if (previousPlan.PlannedAmount >= previousPlan.SpentAmount)
+                {
+                    previousPlan.Completed = true;
+
+                }
+                else
+                { 
+                    previousPlan.Completed = false;
+                }
+
+                user.daysToSalary = Math.Max(0, user.daysToSalary - 1);
+            }
+
             _db.DailyPlans.Add(plan);
             await _db.SaveChangesAsync();
 
-            return plan;
+            return await _db.DailyPlans
+                .Include(p => p.UserSetting)
+                    .ThenInclude(u => u.BankAccount)
+                .FirstAsync(p => p.id == plan.id);
         }
 
         private int CalculateDailyLimit(long balance, int goal, int daysLeft)

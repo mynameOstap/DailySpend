@@ -8,5 +8,6 @@
         public DateTime Date { get; set; }
         public int PlannedAmount { get; set; }
         public long SpentAmount { get; set; }
+        public bool Completed { get; set; } = false;    
     }
 }
