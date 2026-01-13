@@ -108,7 +108,8 @@ namespace DailySpendServer.Controllers
         {
             var notifications = await _db.Notifications
                 .AsNoTracking()
-                .Where(n => !n.IsSent)
+                .Include(u => u.UserSetting)
+                .Where(n => !n.IsSent && n.UserSetting != null && n.UserSetting.IsActive)
                 .Take(20)
                 .ToListAsync();
             var notificationDTOs = notifications.Select(n => new Notification

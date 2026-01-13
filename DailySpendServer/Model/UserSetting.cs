@@ -1,4 +1,7 @@
-﻿namespace DailySpendServer.Model
+﻿using System.Runtime.CompilerServices;
+using DailySpendServer.Enums;
+
+namespace DailySpendServer.Model
 {
     public class UserSetting
     {
@@ -16,5 +19,6 @@
         public int daysToSalary { get; set; }
         public string SelectedAccountId { get; set; } = string.Empty;
         public string WebHookSecret { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
     }
 }

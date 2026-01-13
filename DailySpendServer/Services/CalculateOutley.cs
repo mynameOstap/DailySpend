@@ -41,10 +41,13 @@ namespace DailySpendServer.Services
 
         public async Task<DailyPlan?> CreateDailyPlan(string userId, DateTime date)
         {
-            var user = await _db.UserSettings
+            var user = await _db.UserSettings.Where(u => u.IsActive)
                 .Include(u => u.BankAccount)
                 .FirstOrDefaultAsync(u => u.id == userId);
 
+            if (user == null)
+                return null;
+            
             if (user?.BankAccount == null)
                 return null;
 

@@ -1,5 +1,4 @@
-﻿using DailySpendServer.Model;
-
+﻿
 namespace DailySpendServer.DTO
 {
     public class StatusResponseDTO
