@@ -22,7 +22,7 @@ namespace DailySpendBot.Services
         public async Task<List<AccountDTO>?> ValidateToken(string token)
         {
             var response = await _httpClient.PostAsync(
-                "api/bank/validateToken",
+                "api/monobank/validateToken",
                 new StringContent(JsonSerializer.Serialize(token), Encoding.UTF8, "application/json")
             );
 

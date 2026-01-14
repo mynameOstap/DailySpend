@@ -54,7 +54,8 @@ namespace DailySpendServer.Controllers
                 SelectedAccountId = userSetting.SelectedAccountId
             };
             _db.UserSettings.Add(newUserSetting);
-
+            
+            
             await _db.SaveChangesAsync();
             return Ok(userSetting);
         }

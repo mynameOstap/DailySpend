@@ -15,15 +15,17 @@ namespace DailySpendServer.Controllers
         private readonly HttpSender _httpSender;
         private readonly DailySpendContext _db;
         private readonly CalculateOutley _calculateOutley;
+        private readonly WebHookService _hookService;
 
-        public BankController(HttpSender httpSender, DailySpendContext db, CalculateOutley calculateOutley)
-        {
+        public BankController(HttpSender httpSender, DailySpendContext db, CalculateOutley calculateOutley, WebHookService hookService)
+        {   
             _httpSender = httpSender;
             _db = db;
             _calculateOutley = calculateOutley;
+            _hookService = hookService;
         }
 
-        [HttpPost("api/bank/validateToken")]
+        [HttpPost("api/monobank/validateToken")]
         public async Task<IActionResult> ValidateToken([FromBody] string token)
         {
             var bankAccount = await _httpSender.ValidateToken("https://api.monobank.ua/personal/client-info", token);
@@ -41,6 +43,19 @@ namespace DailySpendServer.Controllers
 
         }
 
+        [HttpGet("api/monobank/webhook/create/{userId}")]
+        public async Task<IActionResult> CreateWebHook(string userId)
+        {
+            try
+            {
+                await _hookService.RegisterWebHook(userId);
+                return Ok(new { message = "Webhook successfully registered" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
         [HttpGet("api/monobank/webhook/{userId}")]
         public async Task<IActionResult> ValidateWebHook([FromRoute] string userId, [FromQuery] string s)
         {
