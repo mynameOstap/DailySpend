@@ -26,6 +26,7 @@ public class GoalTrackingService
         if (balance < user.GoalAmount)
         {
             user.IsActive = false;
+            user.BankAccount.WebHookUrl = null;
             await _db.SaveChangesAsync();
             return GoalResult.Failed;
         }
@@ -33,6 +34,7 @@ public class GoalTrackingService
         if (user.daysToSalary <= 0 && balance >= user.GoalAmount)
         {
             user.IsActive = false;
+            user.BankAccount.WebHookUrl = null;
             await _db.SaveChangesAsync();
             return GoalResult.Completed;
         }

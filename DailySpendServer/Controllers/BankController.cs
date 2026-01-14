@@ -45,7 +45,7 @@ namespace DailySpendServer.Controllers
         public async Task<IActionResult> ValidateWebHook([FromRoute] string userId, [FromQuery] string s)
         {
             var user = await _db.UserSettings.AsNoTracking().FirstOrDefaultAsync(u => u.id == userId);
-            if (user == null || user.WebHookSecret != s || string.IsNullOrWhiteSpace(user.WebHookSecret))
+            if (user == null || user.WebHookSecret != s || string.IsNullOrWhiteSpace(user.WebHookSecret) || !user.IsActive)
             {
                 return Unauthorized();
             }
@@ -56,7 +56,7 @@ namespace DailySpendServer.Controllers
         public async Task<IActionResult> ReceiveWebHook([FromRoute] string userId, [FromQuery] string s, [FromBody] MonoWebhookUpdateDTO update)
         {
             var user = await _db.UserSettings.Include(b => b.BankAccount).FirstOrDefaultAsync(u => u.id == userId);
-            if (user == null || user.WebHookSecret != s || string.IsNullOrWhiteSpace(user.WebHookSecret))
+            if (user == null || user.WebHookSecret != s || string.IsNullOrWhiteSpace(user.WebHookSecret) || !user.IsActive)
             {
                 return Unauthorized();
             }
