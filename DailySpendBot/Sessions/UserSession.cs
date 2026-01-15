@@ -17,5 +17,7 @@ namespace DailySpendBot.Sessions
         public int? Days { get; set; }
         public List<AccountDTO> Accounts { get; set; } = new();
         public string? SelectedAccountId { get; set; }
+        public string maskedPan { get; set; } = string.Empty;
+        public long balance { get; set; } 
     }
 }

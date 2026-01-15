@@ -11,5 +11,7 @@ namespace DailySpendServer.DTO
         public string token { get; set; } = string.Empty;
         public int daysToSalary { get; set; }
         public string SelectedAccountId { get; set; } = string.Empty;
+        public string maskedPan { get; set; } = string.Empty;
+        public long? balance { get; set; } 
     }
 }

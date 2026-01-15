@@ -1,4 +1,6 @@
-﻿using DailySpendBot.DTO;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using DailySpendBot.DTO;
 using DailySpendBot.Services;
 using DailySpendBot.Sessions;
 using Telegram.Bot;
@@ -27,8 +29,12 @@ namespace DailySpendBot.Handlers
 
             if (data.StartsWith("acc:"))
             {
-                var accountId = data["acc:".Length..];
-                s.SelectedAccountId = accountId;
+                var strAccount = data["acc:".Length..];
+                var account = JsonSerializer.Deserialize<BankDataDTO>(strAccount);
+                s.SelectedAccountId = account.id;
+                s.maskedPan = account.maskedPan;
+                s.balance = account.balance ?? 0;
+                
 
                 if (s.Goal is null)
                 {
@@ -52,6 +58,9 @@ namespace DailySpendBot.Handlers
                     s.Token = null;
                     s.Accounts?.Clear();
                     s.SelectedAccountId = null;
+                    s.balance = 0;
+                    s.maskedPan = string.Empty;
+                    
 
                     await bot.SendMessage(chatId, "Введи токен ще раз:", replyMarkup: Menus.SettingsReply(), cancellationToken: ct);
                     break;
@@ -70,7 +79,9 @@ namespace DailySpendBot.Handlers
                         token = s.Token,
                         GoalAmount = s.Goal.Value,
                         daysToSalary = s.Days.Value,
-                        SelectedAccountId = s.SelectedAccountId
+                        SelectedAccountId = s.SelectedAccountId,
+                        maskedPan = s.maskedPan,
+                        balance = s.balance
                     });
 
                     _sessions.Clear(userId);

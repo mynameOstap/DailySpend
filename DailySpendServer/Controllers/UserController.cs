@@ -53,8 +53,16 @@ namespace DailySpendServer.Controllers
                 daysToSalary = userSetting.daysToSalary,
                 SelectedAccountId = userSetting.SelectedAccountId
             };
+            var newBankAccount = new BankAccount()
+            {
+                id = userSetting.SelectedAccountId,
+                UserSettingId = userSetting.id,
+                MaskedPan = userSetting.maskedPan,
+                Balance = userSetting.balance ?? 0,
+                Name = userSetting.name
+            };
             _db.UserSettings.Add(newUserSetting);
-            
+            _db.BankAccounts.Add(newBankAccount);
             
             await _db.SaveChangesAsync();
             return Ok(userSetting);
