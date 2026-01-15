@@ -1,5 +1,6 @@
 ﻿using DailySpendBot.Handlers;
 using DailySpendBot.Services;
+using DailySpendBot.Services.Background;
 using DailySpendBot.Sessions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,6 +19,7 @@ var builder = Host.CreateDefaultBuilder(args)
         {
             client.BaseAddress = new Uri(ctx.Configuration["Backend:BaseUrl"]!);
         });
+        services.AddHostedService<NotificationPuller>();
 
         services.AddSingleton<MessageHandler>();
         services.AddSingleton<CallBackHandler>();

@@ -2,18 +2,20 @@
 {
     public class DailyResetJob : BackgroundService
     {
-        private readonly DailyResetService _dailyResetService;
+        private readonly IServiceScopeFactory _scopeFactory;
         private DateTime _lastRunDate = DateTime.UtcNow.Date;
 
-        public DailyResetJob(DailyResetService dailyResetService)
+        public DailyResetJob(IServiceScopeFactory scopeFactory)
         {
-            _dailyResetService = dailyResetService;
+            _scopeFactory = scopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
             while (!ct.IsCancellationRequested)
             {
+                using var scope = _scopeFactory.CreateScope();
+                var _dailyResetService = scope.ServiceProvider.GetRequiredService<DailyResetService>();
                 try
                 {
                     var today = DateTime.UtcNow.Date;

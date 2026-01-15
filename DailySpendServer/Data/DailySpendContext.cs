@@ -12,6 +12,7 @@ namespace DailySpendServer.Data
         public DbSet<DailyPlan> DailyPlans => Set<DailyPlan>();
         public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<UserEventMessage> UserEvents => Set<UserEventMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

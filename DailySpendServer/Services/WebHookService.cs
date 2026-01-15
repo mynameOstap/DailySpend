@@ -21,19 +21,27 @@ namespace DailySpendServer.Services
         
         public async Task RegisterWebHook(string userId)
         {
-            var user = await _db.UserSettings.Include(b => b.BankAccount).FirstOrDefaultAsync(u => u.id == userId);
+            var user = await _db.UserSettings
+                .Include(b => b.BankAccount)
+                .FirstOrDefaultAsync(u => u.id == userId);
+
             if (user == null || user.BankAccount == null)
                 throw new Exception("User not found");
+
             if (string.IsNullOrEmpty(user.WebHookSecret))
                 user.WebHookSecret = Guid.NewGuid().ToString("N");
-            var url = user.BankAccount.WebHookUrl;
-            if(string.IsNullOrEmpty(url))
-                url = $"{_monobankOptions.BaseUrl}/api/monobank/webhook/{userId}?s={user.WebHookSecret}";
-            var response = await _httpSender.PostJsonAsync("https://api.monobank.ua/personal/webhook", new { webHookUrl = url });
-            var responseString = await response.Content.ReadAsStringAsync();
-            if(!response.IsSuccessStatusCode)
-                throw new Exception($"Failed to register webhook: HTTP {(int)response.StatusCode}: {responseString}");
+
+            var url = $"{_monobankOptions.BaseUrl}/api/monobank/webhook/{userId}?s={user.WebHookSecret}";
+
+            var response = await _httpSender.PostJsonAsync(
+                "https://api.monobank.ua/personal/webhook",
+                new { webHookUrl = url });
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Webhook registration failed");
+
             user.BankAccount.WebHookUrl = url;
+            user.WebHookActive = true;
             await _db.SaveChangesAsync();
         }
     }

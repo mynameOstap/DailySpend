@@ -39,18 +39,13 @@ public static class Menus
             var panText = a.maskedPan?.FirstOrDefault();
             if (string.IsNullOrWhiteSpace(panText))
                 panText = "";
-            var bankData = new
-            {
-                id = a.id,
-                balance = a.Balance,
-                maskedPan = panText
-            };
+            
 
             return new[]
             {
                 InlineKeyboardButton.WithCallbackData(
                     text: panText!,
-                    callbackData: $"acc:{bankData}"
+                    callbackData: $"acc:{a.id}"
                 )
             };
         }).ToList();

@@ -29,11 +29,11 @@ namespace DailySpendBot.Handlers
 
             if (data.StartsWith("acc:"))
             {
-                var strAccount = data["acc:".Length..];
-                var account = JsonSerializer.Deserialize<BankDataDTO>(strAccount);
-                s.SelectedAccountId = account.id;
-                s.maskedPan = account.maskedPan;
-                s.balance = account.balance ?? 0;
+                var accountId = data["acc:".Length..];
+                var account = s.Accounts.FirstOrDefault(a => a.id == accountId);
+                s.SelectedAccountId = accountId;
+                s.maskedPan = account.maskedPan.FirstOrDefault() ?? "";
+                s.balance = account.Balance;
                 
 
                 if (s.Goal is null)

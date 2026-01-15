@@ -64,6 +64,10 @@ namespace DailySpendServer.Controllers
             {
                 return Unauthorized();
             }
+
+            user.WebHookActive = true;
+            user.LastWebhookReceivedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
             return Ok();
         }
 

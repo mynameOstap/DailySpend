@@ -19,6 +19,8 @@ namespace DailySpendServer.Model
         public int daysToSalary { get; set; }
         public string SelectedAccountId { get; set; } = string.Empty;
         public string WebHookSecret { get; set; } = string.Empty;
+        public bool WebHookActive { get; set; } = false;
+        public DateTime LastWebhookReceivedAt { get; set; }
         public bool IsActive { get; set; } = true;
     }
 }

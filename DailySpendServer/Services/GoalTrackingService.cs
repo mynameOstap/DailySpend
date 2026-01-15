@@ -1,5 +1,6 @@
 using DailySpendServer.Data;
 using DailySpendServer.Enums;
+using DailySpendServer.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace DailySpendServer.Services;
@@ -27,6 +28,15 @@ public class GoalTrackingService
         {
             user.IsActive = false;
             user.BankAccount.WebHookUrl = null;
+            _db.UserEvents.Add(new UserEventMessage()
+            {
+                UserId = user.id,
+                Type = "Goal Failed",
+                Message = "Нажаль вам не вдалось заощати гроші, щоб задати нову ціль натискайте налаштування",
+                CreatedAt = DateTime.UtcNow,
+                IsSent = false
+
+            });
             await _db.SaveChangesAsync();
             return GoalResult.Failed;
         }
@@ -35,6 +45,15 @@ public class GoalTrackingService
         {
             user.IsActive = false;
             user.BankAccount.WebHookUrl = null;
+            _db.UserEvents.Add(new UserEventMessage()
+            {
+                UserId = user.id,
+                Type = "Goal Failed",
+                Message = "Вітаю ви справжній молодець ,щоб задати нову ціль гатискайте налаштування",
+                CreatedAt = DateTime.UtcNow,
+                IsSent = false
+
+            });
             await _db.SaveChangesAsync();
             return GoalResult.Completed;
         }
