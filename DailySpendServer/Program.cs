@@ -1,6 +1,8 @@
 
 using DailySpendServer.Data;
 using DailySpendServer.DTO;
+using DailySpendServer.Services;
+using DailySpendServer.Services.Background;
 using DailySpendServer.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,13 @@ builder.Services.AddOptions<MonobankOptions>()
     .ValidateOnStart();
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<WebHookService>();
+builder.Services.AddScoped<GoalTrackingService>();
+builder.Services.AddScoped<DailyResetService>();
+builder.Services.AddScoped<CalculateOutley>();
+
+builder.Services.AddHostedService<DailyResetJob>();
+builder.Services.AddHostedService<WebHookRecoveryJob>();
 
 
 var app = builder.Build();

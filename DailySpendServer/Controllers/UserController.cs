@@ -15,11 +15,13 @@ namespace DailySpendServer.Controllers
         private readonly DailySpendContext _db;
         private readonly HttpSender _httpSender;
         private readonly CalculateOutley _calculateOutley;
-        public UserController(DailySpendContext db, HttpSender httpSender,CalculateOutley calculateOutley)
+        private readonly WebHookService _hookService;
+        public UserController(DailySpendContext db, HttpSender httpSender,CalculateOutley calculateOutley,WebHookService hookService)
         {
             _db = db;
             _httpSender = httpSender;
-            _calculateOutley = calculateOutley; 
+            _calculateOutley = calculateOutley;
+            _hookService = hookService;
         }
 
         [HttpGet("api/users/settings")]
@@ -33,39 +35,93 @@ namespace DailySpendServer.Controllers
 
             return Ok(userExist);
         }
-        [HttpPost("api/users/create")]
-        public async Task<IActionResult> CreateUserSetting([FromBody] UserSettingDTO userSetting)
+        [HttpPost("api/users/createorupdate")]
+        public async Task<IActionResult> CreateOrUpdateUser([FromBody] UserSettingDTO dto)
         {
-            var userExist = await _db.UserSettings.FirstOrDefaultAsync(u => u.id == userSetting.id);
-            if (userExist != null)
-            {
-                return Conflict();
-            }
-            _httpSender.AddToken(userSetting.token);
+            _httpSender.AddToken(dto.token);
 
-            var newUserSetting = new UserSetting
+            var user = await _db.UserSettings
+                .Include(u => u.BankAccount)
+                .FirstOrDefaultAsync(u => u.id == dto.id);
+
+            if (user != null)
             {
-                id = userSetting.id,
-                ChatId = userSetting.ChatId,
-                name = userSetting.name,
-                GoalAmount = userSetting.GoalAmount,
-                token = userSetting.token,
-                daysToSalary = userSetting.daysToSalary,
-                SelectedAccountId = userSetting.SelectedAccountId
-            };
-            var newBankAccount = new BankAccount()
+                
+                user.ChatId = dto.ChatId;
+                user.name = dto.name;
+                user.GoalAmount = dto.GoalAmount;
+                user.token = dto.token;
+                user.daysToSalary = dto.daysToSalary;
+                user.SelectedAccountId = dto.SelectedAccountId;
+                user.IsActive = true; 
+
+                if (user.BankAccount != null)
+                {
+                    if (user.BankAccount.id != dto.SelectedAccountId)
+                    {
+                        _db.BankAccounts.Remove(user.BankAccount);
+                        _db.BankAccounts.Add(CreateBankAccount(dto));
+                    }
+                    else
+                    {
+                        user.BankAccount.MaskedPan = dto.maskedPan;
+                        user.BankAccount.Balance = dto.balance ?? 0;
+                        user.BankAccount.Name = dto.name;
+                        user.BankAccount.WebHookUrl = null; 
+                    }
+                }
+                else
+                {
+                    _db.BankAccounts.Add(CreateBankAccount(dto));
+                }
+
+                _db.UserSettings.Update(user);
+            }
+            else
             {
-                id = userSetting.SelectedAccountId,
-                UserSettingId = userSetting.id,
-                MaskedPan = userSetting.maskedPan,
-                Balance = userSetting.balance ?? 0,
-                Name = userSetting.name
-            };
-            _db.UserSettings.Add(newUserSetting);
-            _db.BankAccounts.Add(newBankAccount);
-            
+
+                var newUser = new UserSetting
+                {
+                    id = dto.id,
+                    ChatId = dto.ChatId,
+                    name = dto.name,
+                    GoalAmount = dto.GoalAmount,
+                    token = dto.token,
+                    daysToSalary = dto.daysToSalary,
+                    SelectedAccountId = dto.SelectedAccountId,
+                    IsActive = true 
+                };
+
+                _db.UserSettings.Add(newUser);
+                _db.BankAccounts.Add(CreateBankAccount(dto));
+            }
+
             await _db.SaveChangesAsync();
-            return Ok(userSetting);
+
+            try 
+            {
+                await _hookService.RegisterWebHook(dto.id);
+            }
+            catch (Exception ex)
+            {
+                
+                Console.WriteLine($"Webhook error: {ex.Message}");
+            }
+
+            return Ok(dto);
+        }
+
+       
+        private BankAccount CreateBankAccount(UserSettingDTO dto)
+        {
+            return new BankAccount
+            {
+                id = dto.SelectedAccountId,
+                UserSettingId = dto.id,
+                MaskedPan = dto.maskedPan,
+                Balance = dto.balance ?? 0,
+                Name = dto.name
+            };
         }
         [HttpGet("api/users/status")]
         public async Task<IActionResult> GetStatus([FromQuery] string userId)
@@ -94,6 +150,31 @@ namespace DailySpendServer.Controllers
                 Balance = plan.UserSetting?.BankAccount?.Balance ?? 0,
                 daysToSalary = plan.UserSetting?.daysToSalary ?? 0
             });
+        }
+        [HttpPost("api/user/notification/mark/{notificationId}")]
+        public async Task<IActionResult> MarkNotificationAsSent([FromRoute] string eventMessageId)
+        {
+            var eventMessage = await _db.UserEventMessages.FirstOrDefaultAsync(n => n.Id == eventMessageId);
+            if (eventMessage == null)
+            {
+                return NotFound();
+            }
+            if (eventMessage.IsSent) return Ok();
+
+            eventMessage.IsSent = true;
+            await _db.SaveChangesAsync();
+            return Ok();
+        }
+        [HttpGet("api/user/notification")]
+        public async Task<IActionResult> GetPendingNotifications()
+        {
+            var eventMessages = await _db.UserEventMessages
+                .AsNoTracking()
+                .Where(m => !m.IsSent)
+                .Take(20)
+                .ToListAsync();
+          
+            return Ok(eventMessages);
         }
 
     }

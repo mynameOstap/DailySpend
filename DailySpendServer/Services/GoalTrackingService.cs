@@ -31,7 +31,8 @@ public class GoalTrackingService
             _db.UserEvents.Add(new UserEventMessage()
             {
                 UserId = user.id,
-                Type = "Goal Failed",
+                ChatId = user.ChatId,
+                Type = UserEventType.ResetSetting,
                 Message = "Нажаль вам не вдалось заощати гроші, щоб задати нову ціль натискайте налаштування",
                 CreatedAt = DateTime.UtcNow,
                 IsSent = false
@@ -48,8 +49,9 @@ public class GoalTrackingService
             _db.UserEvents.Add(new UserEventMessage()
             {
                 UserId = user.id,
-                Type = "Goal Failed",
-                Message = "Вітаю ви справжній молодець ,щоб задати нову ціль гатискайте налаштування",
+                ChatId = user.ChatId,
+                Type = UserEventType.ResetSetting,
+                Message = "Вітаю ви справжній молодець ,щоб задати нову ціль натискайте налаштування",
                 CreatedAt = DateTime.UtcNow,
                 IsSent = false
 

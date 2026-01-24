@@ -79,7 +79,7 @@ namespace DailySpendBot.Services
         public async Task<string> CreateUser(UserSettingDTO userSetting)
         {
             var jsonContent = new StringContent(JsonSerializer.Serialize(userSetting), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("api/users/create", jsonContent);
+            var response = await _httpClient.PostAsync("api/users/createorupdate", jsonContent);
             var content = await response.Content.ReadAsStringAsync();
             return content;
 
@@ -90,7 +90,7 @@ namespace DailySpendBot.Services
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(content) ?? throw new Exception($"Deserialize<{typeof(T).Name}> returned null. Body: {content}");
         }
-
+        
         public async Task<bool> MarkNotification(string url)
         {
             var response = await _httpClient.PostAsync(url, null);

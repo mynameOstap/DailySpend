@@ -13,6 +13,7 @@ namespace DailySpendServer.Data
         public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<UserEventMessage> UserEvents => Set<UserEventMessage>();
+        public DbSet<UserEventMessage> UserEventMessages => Set<UserEventMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +38,12 @@ namespace DailySpendServer.Data
             .WithOne(n => n.UserSetting)
             .HasForeignKey(n => n.UserSettingId)
             .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserSetting>()
+                .HasMany(m => m.UserEventMessages)
+                .WithOne(u => u.UserSetting)
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

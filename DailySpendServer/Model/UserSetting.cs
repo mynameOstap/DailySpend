@@ -13,6 +13,7 @@ namespace DailySpendServer.Model
         public ICollection<DailyPlan> DailyPlans { get; set; } = new List<DailyPlan>();
         public string NotificationId { get; set; } = string.Empty;
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<UserEventMessage> UserEventMessages { get; set; } = new List<UserEventMessage>();
         public string name { get; set; } = string.Empty;
         public int GoalAmount { get; set; }
         public string token { get; set; } = string.Empty;

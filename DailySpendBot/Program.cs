@@ -20,7 +20,7 @@ var builder = Host.CreateDefaultBuilder(args)
             client.BaseAddress = new Uri(ctx.Configuration["Backend:BaseUrl"]!);
         });
         services.AddHostedService<NotificationPuller>();
-
+        services.AddHostedService<UserEventMessagePuller>();
         services.AddSingleton<MessageHandler>();
         services.AddSingleton<CallBackHandler>();
         services.AddSingleton<UpdateRouter>(); 
