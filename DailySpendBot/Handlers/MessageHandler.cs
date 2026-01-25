@@ -12,11 +12,13 @@ namespace DailySpendBot.Handlers
     {
         private readonly BotHttpClient _botHttpClient;
         private readonly BotSessionStore _session;
+        private readonly CacheService _cache;
 
-        public MessageHandler(BotHttpClient botHttpClient, BotSessionStore session)
+        public MessageHandler(BotHttpClient botHttpClient, BotSessionStore session, CacheService cache)
         {
             _botHttpClient = botHttpClient;
             _session = session;
+            _cache = cache;
         }
 
         public async Task HandleMessage(ITelegramBotClient bot, Message msg, CancellationToken ct = default)
@@ -26,6 +28,7 @@ namespace DailySpendBot.Handlers
             var chatId = msg.Chat.Id;
             var userId = msg.From!.Id;
             var text = msg.Text.Trim();
+            string status;
             UserSettingDTO settings;
 
             var s = _session.GetOrCreate(userId);
@@ -40,13 +43,19 @@ namespace DailySpendBot.Handlers
 
             if (text == Menus.BtnStatus)
             {
-                var status = await _botHttpClient.GetUserStatus(userId.ToString());
+                if (!string.IsNullOrEmpty(_cache.GetUserStatus(userId.ToString())))
+                {
+                    status = _cache.GetUserStatus(userId.ToString());
+                    await bot.SendMessage(chatId, status, replyMarkup: Menus.MainReply(), cancellationToken: ct);
+                    return;
+                }
+                status = await _botHttpClient.GetUserStatus(userId.ToString());
                 if (string.IsNullOrEmpty(status) || status == "null")
                 {
                     await bot.SendMessage(chatId, "Ви ще не налаштували бота. Перейдіть в Налаштування.", replyMarkup: Menus.MainReply(), cancellationToken: ct);
                     return;
                 }
-
+                _cache.SetUserStatus(userId.ToString(), status);
                 await bot.SendMessage(chatId, status, replyMarkup: Menus.MainReply(), cancellationToken: ct);
                 return;
             }

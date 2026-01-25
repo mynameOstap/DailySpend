@@ -23,7 +23,8 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddHostedService<UserEventMessagePuller>();
         services.AddSingleton<MessageHandler>();
         services.AddSingleton<CallBackHandler>();
-        services.AddSingleton<UpdateRouter>(); 
+        services.AddSingleton<UpdateRouter>();
+        services.AddScoped<CacheService>();
 
         services.AddHostedService<BotRunner>(); 
     });
